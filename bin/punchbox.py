@@ -135,16 +135,18 @@ def generate_playbook(deployer):
     logging.info('Successful generation of playbook in %s', punchbox_playbook_target)
 
 
-def patch_security_model(model: Dict):
+def patch_security_model(model: Dict, servers: List):
     local_es_certs = "{}/../punch/resources/security/certs/elasticsearch".format(ROOT_DIR)
     local_kibana_certs = "{}/../punch/resources/security/certs/kibana".format(ROOT_DIR)
-    local_user_certs = "{}/../punch/resources/security/certs/user".format(ROOT_DIR)
     local_gateway_keystore = "{}/../punch/resources/security/keystores/gateway/gateway.keystore".format(ROOT_DIR)
     model['security'] = {}
     model['security']['local_es_certs'] = local_es_certs
     model['security']['local_kibana_certs'] = local_kibana_certs
-    model['security']['local_user_certs'] = local_user_certs
     model['security']['local_gateway_keystore'] = local_gateway_keystore
+    model['security']['servers'] = {}
+    for server in servers:
+        model['security']['servers'][server] = {}
+        model['security']['servers'][server]['certs'] = "{}/../punch/resources/security/certs/{}".format(ROOT_DIR, server)
 
     return model
 
@@ -177,7 +179,8 @@ def generate_model(platform_config, deployer, vagrant_mode, vagrant_os: str = No
         model['iface'] = "ens4"
     # security model
     if security:
-        model = patch_security_model(model)
+        servers: List = platform_config['targets']['info'].keys()
+        model = patch_security_model(model, servers)
 
     model = json.dumps({**model, **platform_config['punch']}, indent=4, sort_keys=True)
     model_file = open(generated_model, "w+")

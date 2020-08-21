@@ -21,7 +21,16 @@
       }
    },
 
- 
+    {%- if security is defined %}
+    "certificates": {
+      {% for server_id, server_section in security.servers.items() %}
+      "{{server_id}}": {
+        "local_certificates_dir": "{{server_section.certs}}"
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    },
+    {%- endif %}
+
     {% if shiva is defined %}
     "shiva": {
     "shiva_version": "{{ version.shiva }}",
@@ -154,7 +163,7 @@
             {% if security is defined %}
             ,
             "ssl": {
-              "enabled": false,
+              "enabled": true,
               "local_key_store_path": "{{security.local_gateway_keystore}}",
               "key_store_type": "jks",
               "key_store_password": "gateway",
@@ -176,7 +185,7 @@
             "settings": ["es.index.read.missing.as.empty: yes", "es.nodes.discovery: true"]
             {% if security is defined %}
             ,
-            "ssl_enabled": false
+            "ssl_enabled": true
             {% endif %}
 
           },
@@ -281,18 +290,37 @@
           "opendistro_security": {
             "opendistro_security_version": "{{ version.opendistro_security }}",
             "local_ssl_certs_dir": "{{security.local_es_certs}}",
-            "admin_pemkey_name": "elasticsearch-admin-key.pem",
-            "admin_pemcert_name": "elasticsearch-admin-cert.pem",
-            "admin_pemtrustedcas_name": "elasticsearch-admin-ca.pem",
-            "ssl_transport_pemkey_name": "elasticsearch-node-key.pem",
-            "ssl_transport_pemcert_name": "elasticsearch-node-cert.pem",
-            "ssl_transport_pemtrustedcas_name": "elasticsearch-node-ca.pem",
+            "admin_pemkey_name": "es-node-super-1-key-pkcs8.pem",
+            "admin_pemcert_name": "es-node-super-1-cert.pem",
+            "admin_pemtrustedcas_name": "es-node-ca.pem",
+            "ssl_transport_pemkey_name": "es-node-super-2-key-pkcs8.pem",
+            "ssl_transport_pemcert_name": "es-node-super-2-cert.pem",
+            "ssl_transport_pemtrustedcas_name": "es-node-ca.pem",
             "ssl_http_enabled": true,
-            "ssl_http_pemkey_name": "elasticsearch-http-server-key.pem",
-            "ssl_http_pemcert_name": "elasticsearch-http-server-cert.pem",
-            "ssl_http_pemtrustedcas_name": "elasticsearch-http-server-ca.pem",
-            "authcz_admin_dn": ["emailAddress=elasticsearch-admin-super-1@localhost.com,CN=elasticsearch-admin-super-1,OU=AC,O=AwsomeCompany,L=Paris,ST=IdF,C=FR"],
-            "nodes_dn": ["emailAddress=elasticsearch-node-super-1@localhost.com,CN=elasticsearch-node-super-1,OU=AC,O=AwsomeCompany,L=Paris,ST=IdF,C=FR"],
+            "ssl_http_pemkey_name": "es-http-server-1-key-pkcs8.pem",
+            "ssl_http_pemcert_name": "es-http-server-1-cert.pem",
+            "ssl_http_pemtrustedcas_name": "es-http-ca.pem",
+            "authcz_admin_dn": [
+              "emailAddress=es-node-super-1@server2.com,CN=server2,OU=AC,O=AwsomeCompany,L=Paris,ST=IdF,C=FR"
+            ],
+            "nodes_dn": [
+              "emailAddress=es-node-super-2@server2.com,CN=server2,OU=AC,O=AwsomeCompany,L=Paris,ST=IdF,C=FR"
+            ],
+            {#- add operators and shiva servers as admin usernames to allow them to publish in es #}
+            {% set admins = [] %}
+            {% for oserver in operator.servers %}
+            {% do admins.append(oserver) %}
+            {% endfor %}
+            {% if shiva is defined %}
+            {% for sserver in shiva.servers %}
+            {% do admins.append(sserver) %}
+            {% endfor %}
+            {% endif %}
+            {% set usernames = [] %}
+            {% for username in admins | unique %}
+            {% do usernames.append(username) %}
+            {% endfor %}
+            "additional_admin_usernames": {{usernames | to_json}},
             "kibana_index": ".kibana-admin"
           },
           "opendistro_alerting": {
