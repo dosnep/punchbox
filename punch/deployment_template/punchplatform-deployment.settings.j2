@@ -20,6 +20,16 @@
       }
    },
 
+   {%- if security is defined %}
+   "certificates": {
+     {% for server in operator.servers %}
+     "{{server}}": {
+       "local_certificates_dir": "{{security.local_operator_certs}}/{{server}}"
+     }{% if not loop.last %},{% endif %}
+     {% endfor %}
+   },
+   {%- endif %}
+
  
     {% if shiva is defined %}
     "shiva": {
@@ -252,7 +262,18 @@
             "http_api_address" : "{{ server }}",
             "transport_address" : "{{ server }}",
             "bind_address" : "_{{ iface }}_",
-            "rack_id" : "{{ loop.index }}"
+            "rack_id" : "{{ loop.index }}"{% if security is defined %},
+            "local_ssl_certs_dir": "{{security.local_es_certs}}/{{server}}",
+            "admin_pemkey_name": "admin-super-1-key-pkcs8.pem",
+            "admin_pemcert_name": "admin-super-1-cert.pem",
+            "admin_pemtrustedcas_name": "punch-ca.pem",
+            "ssl_transport_pemkey_name": "node-{{server}}-super-1-key-pkcs8.pem",
+            "ssl_transport_pemcert_name": "node-{{server}}-super-1-cert.pem",
+            "ssl_transport_pemtrustedcas_name": "punch-ca.pem",
+            "ssl_http_pemkey_name": "http-{{server}}-server-1-key-pkcs8.pem",
+            "ssl_http_pemcert_name": "http-{{server}}-server-1-cert.pem",
+            "ssl_http_pemtrustedcas_name": "punch-ca.pem"
+            {% endif %}
           }
           {% if not loop.last %}
           ,
@@ -278,19 +299,19 @@
         "plugins":{
           "opendistro_security": {
             "opendistro_security_version": "{{ version.opendistro_security }}",
-            "local_ssl_certs_dir": "{{security.local_es_certs}}",
-            "admin_pemkey_name": "admin-key.pem",
-            "admin_pemcert_name": "admin-cert.pem",
-            "admin_pemtrustedcas_name": "cachain.pem",
-            "ssl_transport_pemkey_name": "node-key.pem",
-            "ssl_transport_pemcert_name": "node-cert.pem",
-            "ssl_transport_pemtrustedcas_name": "cachain.pem",
-            "ssl_http_enabled": false,
-            "ssl_http_pemkey_name": "server2-key.pem",
-            "ssl_http_pemcert_name": "server2-cert.pem",
-            "ssl_http_pemtrustedcas_name": "server2-cachain.pem",
-            "authcz_admin_dn": ["emailAddress=nodesuper1@thales.com,CN=nodesuper1,OU=ts,O=thales,L=paris,ST=idf,C=fr"],
-            "nodes_dn": ["emailAddress=nodesuper2@thales.com,CN=nodesuper2,OU=ts,O=thales,L=paris,ST=idf,C=fr"],
+            "ssl_http_enabled": true,
+            "ssl_transport_enforce_hostname_verification": true,
+            "authcz_admin_dn": [
+              "emailAddress=admin-super-1@easyssl.com,CN=server2,OU=AC,O=AwsomeCompany,L=Paris,ST=IdF,C=FR"
+            ],
+            "nodes_dn": [
+              "emailAddress=node-server2-super-1@easyssl.com,CN=server2,OU=AC,O=AwsomeCompany,L=Paris,ST=IdF,C=FR",
+              "emailAddress=node-server3-super-1@easyssl.com,CN=server3,OU=AC,O=AwsomeCompany,L=Paris,ST=IdF,C=FR"
+            ],
+            "ssl_http_enabled_ciphers": ["TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"],
+            "ssl_http_enabled_protocols": ["TLSv1.2"],
+            "ssl_transport_enabled_ciphers": ["TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"],
+            "ssl_transport_enabled_protocols": ["TLSv1.2"],
             "kibana_index": ".kibana-admin"
           },
           "opendistro_alerting": {

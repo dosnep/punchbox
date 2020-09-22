@@ -126,7 +126,6 @@ install: ${ALLTOOLS_INSTALLED_MARKERFILE}
 	@$(call green, "activate.sh:", "${ACTIVATE_SH}")
 	@$(call green, "install complete", "type 'make' for available targets !")
 
-
 configure-deployer:
 	@$(call green, "Deployer zip path in .deployer change it\'s content to match yours:", "${DIR}/.deployer")
 	@echo ${DEFAULT_DEPLOYER_ZIP_PATH} > ${DIR}/.deployer
@@ -184,7 +183,18 @@ punchbox-centos-32G: deployed-configuration-32G
 				 --os centos/7 \
 				 --interface eth1 \
 				 --deployer $(shell cat ${DIR}/.deployer)
-				
+
+punchbox-centos-32G-security: deployed-configuration-32G
+	@$(call green, "Deploying 32G PunchBox")
+	@. ${DIR}/.venv/bin/activate && . ${ACTIVATE_SH} && \
+		punchbox --platform-config-file ${DIR}/configurations/complete_punch_32G.json \
+				 --generate-vagrantfile \
+				 --punch-user-config ${DIR}/punch/configurations/validation \
+				 --os centos/7 \
+				 --interface eth1 \
+				 --security \
+				 --deployer $(shell cat ${DIR}/.deployer)
+
 punchbox-centos-32G-validation: deployed-configuration-32G
 	@$(call green, "Deploying 32G PunchBox")
 	@. ${DIR}/.venv/bin/activate && . ${ACTIVATE_SH} && \
