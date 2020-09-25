@@ -109,17 +109,10 @@ def destroy_vagrant_boxes():
         logging.info(' vagrant boxes successfully stopped')
 
 def patch_security_model(model: Dict, servers: List):
-    local_es_certs = "{}/../punch/resources/security/certs/elasticsearch".format(ROOT_DIR)
-    local_operator_certs = "{}/../punch/resources/security/certs/operators".format(ROOT_DIR)
-    local_kibana_certs = "{}/../punch/resources/security/certs/kibana".format(ROOT_DIR)
-    local_user_certs = "{}/../punch/resources/security/certs/user".format(ROOT_DIR)
-    local_gateway_keystore = "{}/../punch/resources/security/keystores/gateway/gateway.keystore".format(ROOT_DIR)
+    security_dir="{}/../punch/resources/security/platform_32G".format(ROOT_DIR)
+
     model['security'] = {}
-    model['security']['local_es_certs'] = local_es_certs
-    model['security']['local_operator_certs'] = local_operator_certs
-    model['security']['local_kibana_certs'] = local_kibana_certs
-    model['security']['local_user_certs'] = local_user_certs
-    model['security']['local_gateway_keystore'] = local_gateway_keystore
+    model['security']['security_dir'] = security_dir
     model['security']['servers'] = {}
     for server in servers:
         model['security']['servers'][server] = {}

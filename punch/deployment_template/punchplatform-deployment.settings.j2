@@ -24,7 +24,7 @@
    "certificates": {
      {% for server in operator.servers %}
      "{{server}}": {
-       "local_certificates_dir": "{{security.local_operator_certs}}/{{server}}"
+       "local_certificates_dir": "{{security.security_dir}}/{{server}}/operator"
      }{% if not loop.last %},{% endif %}
      {% endfor %}
    },
@@ -156,19 +156,19 @@
             "port": 4242
             {% if security is defined %}
             ,
-            "ssl": {
-              "enabled": false,
-              "local_key_store_path": "{{security.local_gateway_keystore}}",
-              "key_store_type": "jks",
-              "key_store_password": "gateway",
-              "key_alias": "gateway",
-              "key_password": "gateway",
-              "es_client": {
-                "enabled": true,
-                "private_key": "{{server}}-client-1-key-pkcs8.pem",
-                "certificate": "{{server}}-client-1-cert.pem",
-                "trusted_certificate": "{{server}}-ca.pem"
-              }
+            "server_ssl": {
+              "local_key_store_dir": "{{security.security_dir}}/{{server}}/gateway",
+              "key_store_name": "gateway-keystore.p12",
+              "key_store_type": "PKCS12",
+              "key_store_password": "test",
+              "key_alias": "gateway-server-key"
+            },
+            "es_client_ssl":{
+                "local_ssl_certs_dir": "{{security.security_dir}}/{{server}}/gateway",
+                "private_key_name": "gateway-client-1-key-pkcs8.pem",
+                "certificate_name": "gateway-client-1-cert.pem",
+                "trusted_certificate_name": "punch-ca.pem",
+                "use_keys_for_data_cluster": false
             }
             {% endif %}
           }
@@ -181,22 +181,17 @@
           "data_cluster": {
             "cluster_id": "es_search",
             "hosts" : {{ server_ip | tojson }},
-            "settings": ["es.index.read.missing.as.empty: yes", "es.nodes.discovery: true"]
-            {% if security is defined %}
-            ,
-            "ssl_enabled": false
-            {% endif %}
-
+            "settings": ["es.index.read.missing.as.empty: yes", "es.nodes.discovery: true"],
+            "metrics_credentials": {
+                "user": "admin",
+                "password": "admin"
+            }
           },
           "metric_cluster": {
             "cluster_id": "es_search",
             "hosts": {{ server_ip | tojson }},
             "index_name": "gateway-logs",
             "settings": ["es.index.read.missing.as.empty: yes", "es.nodes.discovery: true"]
-            {% if security is defined %}
-            ,
-            "ssl_enabled": false
-            {% endif %}
           }
         },
         "resources": {
@@ -263,7 +258,7 @@
             "transport_address" : "{{ server }}",
             "bind_address" : "_{{ iface }}_",
             "rack_id" : "{{ loop.index }}"{% if security is defined %},
-            "local_ssl_certs_dir": "{{security.local_es_certs}}/{{server}}",
+            "local_ssl_certs_dir": "{{security.security_dir}}/{{server}}/es",
             "admin_pemkey_name": "admin-super-1-key-pkcs8.pem",
             "admin_pemcert_name": "admin-super-1-cert.pem",
             "admin_pemtrustedcas_name": "punch-ca.pem",
@@ -312,10 +307,8 @@
             "ssl_http_enabled_protocols": ["TLSv1.2"],
             "ssl_transport_enabled_ciphers": ["TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"],
             "ssl_transport_enabled_protocols": ["TLSv1.2"],
+            "additional_admin_usernames": ["server1", "server2", "server3"],
             "kibana_index": ".kibana-admin"
-          },
-          "opendistro_alerting": {
-            "opendistro_alerting_version": "{{ version.opendistro_security }}"
           }
         }
         {% endif %}
@@ -395,12 +388,12 @@
         {% if security is defined %}
         ,
         "server_ssl_enabled": false,
-        "local_ssl_certs_dir": "{{security.local_kibana_certs}}",
-        "server_ssl_key_name": "kibana-server-key.pem",
-        "server_ssl_certificate_name": "kibana-server-cert.pem",
+        "local_ssl_certs_dir": "{{security.security_dir}}/server1/kibana",
+        "server_ssl_key_name": "kibana-server-1-key.pem",
+        "server_ssl_certificate_name": "kibana-server-1-cert.pem",
         "elasticsearch_ssl_enabled": false,
         "elasticsearch_ssl_verificationMode": "none",
-        "elasticsearch_ssl_certificateAuthorities_names": ["cachain.pem"]
+        "elasticsearch_ssl_certificateAuthorities_names": ["punch-ca.pem"]
         {% endif %}
       }
     },
