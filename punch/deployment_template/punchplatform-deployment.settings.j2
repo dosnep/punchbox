@@ -406,7 +406,6 @@
         ,
         "plugins":{
           "punchplatform": {
-            "punchplatform_version": "{{ version.punch }}",
             "rest_api": {
               "hosts": {{ server_ip | tojson }}
               {% if security is defined %}
@@ -433,7 +432,14 @@
     {% endfor %}
     },
     "plugins":{
+    "punchplatform": {
+        "punchplatform_version": "{{ version.punch }}"
+      },
+      "punchplatform_feedback": {
+        "punchplatform_feedback_version": "{{ version.punch }}"
+      }
       {% if security is defined %}
+      ,
       "opendistro_security": {
         "opendistro_security_version": "{{ version.opendistro_security }}"
       },
